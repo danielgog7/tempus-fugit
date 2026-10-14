@@ -871,6 +871,18 @@ textarea.big{width:100%;min-height:130px;background:var(--raised);border:1px sol
       <div class="field"><label for="fScreen">Horas de ecrã por lazer/dia</label><input type="number" id="fScreen" min="0" max="16" step="0.5" inputmode="decimal"></div>
       <div class="field full"><small>Trabalho conta 220 dias por ano até à reforma. Rotinas (comer, higiene, deslocações) contam 3 horas por dia. Ecrã é o tempo de telemóvel, PC e TV fora do trabalho.</small></div>
     </div>
+    <div class="sync">
+      <div class="eyebrow" style="margin-top:22px">Sincronizar com GitHub</div>
+      <p class="sub">Guarda os dados num repositório privado teu para teres o mesmo em todos os dispositivos. Quando ligas, fica a versão mais recente.</p>
+      <div class="fields">
+        <div class="field full"><label for="syRepo">Repositório privado</label><input class="txt" id="syRepo" placeholder="utilizador/tempus-dados" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        <div class="field full"><label for="syToken">Token do GitHub</label><input id="syToken" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        <div class="field full"><label for="syPass">Frase-passe de encriptação</label><input id="syPass" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"><small>Tem de ser igual em todos os dispositivos. Se a esqueceres, a cópia no GitHub fica ilegível.</small></div>
+      </div>
+      <div class="form-actions" style="margin-top:10px"><button type="button" class="btn primary" id="syConnect">Ligar e sincronizar</button><button type="button" class="btn" id="syNow" hidden>Sincronizar agora</button><button type="button" class="btn danger" id="syOff" hidden>Desligar</button></div>
+      <div class="msg" id="syMsg" role="status"></div>
+      <div class="msg" id="syInfo"></div>
+    </div>
     <div class="backup">
       <div class="eyebrow" style="margin-top:22px">Cópia de segurança</div>
       <p class="sub">Copia o texto e guarda-o (nas notas ou num email para ti). Para restaurar, cola-o aqui e toca em Importar. Importar substitui tudo.</p>
@@ -912,7 +924,8 @@ const DEF={birth:'2001-05-20',time:'08:00',life:85,target:30,sleep:8,work:8,reti
 let st=load();
 function load(){let s={};try{const r=localStorage.getItem(KEY);if(r)s=JSON.parse(r)||{};}catch(e){}
   const o=Object.assign({},DEF,s);['people','acts','logs','bucket','periods','goals','notes','letters'].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[];});return o;}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+let syncSchedule=()=>{};
+function save(){st.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}syncSchedule();}
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1919,6 +1932,92 @@ $('retroPrev').addEventListener('click',()=>{retroYear--;drawRetro();$('retro').
 $('retroNext').addEventListener('click',()=>{retroYear++;drawRetro();$('retro').scrollTop=0;});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('retro').hidden)$('retro').hidden=true;});
 
+/* ---------- Sincronização com GitHub (repositório privado, AES-GCM opcional) ---------- */
+const SKEY='tempus.sync', SFILE='tempus.json', LISTS=['people','acts','logs','bucket','periods','goals','notes','letters'];
+let sy=(()=>{try{return JSON.parse(localStorage.getItem(SKEY))||null;}catch(e){return null;}})(), syBusy=false, syTimer=null, syLastAuto=0;
+const syKeyCache={}, tenc=new TextEncoder(), tdec=new TextDecoder();
+const sySave=()=>{try{sy?localStorage.setItem(SKEY,JSON.stringify(sy)):localStorage.removeItem(SKEY);}catch(e){}};
+const b64e=bytes=>{let s='';const a=new Uint8Array(bytes);for(let i=0;i<a.length;i+=0x8000)s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000));return btoa(s);};
+const b64d=str=>{const s=atob(String(str).replace(/\s/g,''));const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;};
+async function deriveKey(pass,saltB64){const id=pass+'|'+saltB64;if(syKeyCache[id])return syKeyCache[id];
+  const base=await crypto.subtle.importKey('raw',tenc.encode(pass),'PBKDF2',false,['deriveKey']);
+  return syKeyCache[id]=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(saltB64),iterations:310000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function packData(data){
+  if(!sy.pass)return {app:'tempus-fugit',v:1,enc:false,updatedAt:data.updatedAt||0,data};
+  if(!sy.salt){sy.salt=b64e(crypto.getRandomValues(new Uint8Array(16)));sySave();}
+  const iv=crypto.getRandomValues(new Uint8Array(12)), key=await deriveKey(sy.pass,sy.salt);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,tenc.encode(JSON.stringify(data)));
+  return {app:'tempus-fugit',v:1,enc:true,updatedAt:data.updatedAt||0,salt:sy.salt,iv:b64e(iv),data:b64e(ct)};
+}
+async function unpackData(file){
+  if(!file||file.app!=='tempus-fugit')throw new Error('formato');
+  if(!file.enc)return file.data;
+  if(!sy.pass)throw new Error('precisa-pass');
+  const key=await deriveKey(sy.pass,file.salt);
+  try{const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(file.iv)},key,b64d(file.data));return JSON.parse(tdec.decode(pt));}catch(e){throw new Error('pass');}
+}
+async function gh(method,body){
+  const r=await fetch(`https://api.github.com/repos/${sy.repo}/contents/${SFILE}`,{method,cache:'no-store',
+    headers:Object.assign({'Authorization':'Bearer '+sy.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body?{'Content-Type':'application/json'}:{}),
+    body:body?JSON.stringify(body):undefined});
+  if(r.status===404&&method==='GET')return null;
+  if(!r.ok){const e=new Error('http');e.status=r.status;throw e;}
+  return r.json();
+}
+function syErr(e){
+  if(e.status===401||e.status===403)return 'O GitHub recusou o token. Confirma que tem acesso a este repositório com permissão "Contents: Read and write".';
+  if(e.status===404)return 'Repositório não encontrado. Confirma o nome (utilizador/repositório) e se o token tem acesso a ele.';
+  if(e.status===409||e.status===422)return 'Os dados mudaram noutro dispositivo enquanto gravava. Toca em "Sincronizar agora".';
+  if(e.message==='pass')return 'Frase-passe errada: não consegui ler os dados do GitHub.';
+  if(e.message==='precisa-pass')return 'Os dados no GitHub estão encriptados. Indica a frase-passe e liga outra vez.';
+  if(e.message==='formato')return 'O ficheiro no GitHub não é da Tempus Fugit.';
+  return 'Sem ligação ao GitHub. A app tenta outra vez quando houver rede.';
+}
+function syStatus(t,cls){const m=$('syMsg');m.textContent=t;m.className='msg'+(cls?' '+cls:'');}
+function applyRemote(data){
+  st=Object.assign({},DEF,data);LISTS.forEach(k=>{if(!Array.isArray(st[k]))st[k]=[];});
+  try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}
+  drawChips();renderStatic();
+}
+async function syncNow(reason){
+  if(!sy)return;
+  if(syBusy){syncSchedule();return;}
+  syBusy=true;syStatus('A sincronizar…');
+  try{
+    const remote=await gh('GET');let file=null,sha=null;
+    if(remote){sha=remote.sha;file=JSON.parse(tdec.decode(b64d(remote.content)));}
+    if(file&&file.enc&&file.salt&&sy.salt!==file.salt){sy.salt=file.salt;sySave();}
+    if(!st.example&&!st.updatedAt){st.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+    const lu=st.example?0:(st.updatedAt||0), ru=file?(file.updatedAt||0):-1;
+    if(file&&ru>lu){applyRemote(await unpackData(file));sy.last=Date.now();sySave();syStatus('Atualizado com os dados do GitHub.','ok');}
+    else if(!file&&st.example){syStatus('Ainda não há dados no GitHub nem dados teus neste dispositivo. Define os teus dados primeiro.','err');}
+    else if(!file||lu>ru){
+      const packed=await packData(st);
+      await gh('PUT',Object.assign({message:'Tempus Fugit '+new Date().toISOString(),content:b64e(tenc.encode(JSON.stringify(packed)))},sha?{sha}:{}));
+      sy.last=Date.now();sySave();syStatus('Enviado para o GitHub.','ok');
+    }else{if(reason==='connect'&&file.enc)await unpackData(file);sy.last=Date.now();sySave();syStatus('Tudo sincronizado.','ok');}
+  }catch(e){syStatus(syErr(e),'err');}
+  finally{syBusy=false;drawSyncInfo();}
+}
+syncSchedule=()=>{if(!sy)return;clearTimeout(syTimer);syTimer=setTimeout(()=>syncNow('auto'),4000);};
+function drawSyncInfo(){$('syInfo').textContent=sy&&sy.last?'Última sincronização: '+new Date(sy.last).toLocaleString('pt-PT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+(sy.pass?' · encriptado':' · sem encriptação'):'';}
+function drawSync(){
+  const on=!!sy;$('syRepo').value=on?sy.repo:'';$('syToken').value=on?sy.token:'';$('syPass').value=on?(sy.pass||''):'';
+  $('syNow').hidden=!on;$('syOff').hidden=!on;$('syConnect').textContent=on?'Guardar e sincronizar':'Ligar e sincronizar';drawSyncInfo();
+}
+$('syConnect').addEventListener('click',()=>{
+  const repo=$('syRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/+$/,''), token=$('syToken').value.trim(), pass=$('syPass').value;
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo))return syStatus('Indica o repositório no formato utilizador/repositório.','err');
+  if(!token)return syStatus('Cola o token do GitHub.','err');
+  if(pass&&!(window.crypto&&crypto.subtle))return syStatus('Este navegador não suporta encriptação. Abre a app pelo endereço https.','err');
+  const keepSalt=sy&&sy.pass===pass&&sy.repo===repo?sy.salt:null;
+  sy={repo,token,pass,salt:keepSalt,last:0};sySave();drawSync();syncNow('connect');
+});
+$('syNow').addEventListener('click',()=>syncNow('manual'));
+$('syOff').addEventListener('click',e=>{if(!armed(e.currentTarget))return;clearTimeout(syTimer);sy=null;sySave();drawSync();syStatus('Desligado. Os dados continuam neste dispositivo.');});
+['syRepo','syToken','syPass'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('syConnect').click();}}));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sy&&Date.now()-syLastAuto>30000){syLastAuto=Date.now();syncNow('focus');}});
+
 /* ---------- Marcos ---------- */
 const FACTS=[
  [8,'Mozart','compôs a primeira sinfonia.'],
@@ -2040,7 +2139,7 @@ window.addEventListener('resize',()=>{if(view==='v-graficos'){const n=new Date()
 /* ---------- Definições ---------- */
 function openSettings(){
   $('fBirth').value=st.example?'':st.birth;$('fTime').value=st.example?'':(st.time||'');
-  $('fLife').value=st.life;$('fRetire').value=st.retire;$('fSleep').value=st.sleep;$('fWork').value=st.work;$('fScreen').value=st.screen;$('fErr').textContent='';$('bkText').value='';$('bkMsg').textContent='';
+  $('fLife').value=st.life;$('fRetire').value=st.retire;$('fSleep').value=st.sleep;$('fWork').value=st.work;$('fScreen').value=st.screen;$('fErr').textContent='';$('bkText').value='';$('bkMsg').textContent='';drawSync();
   $('sheet').hidden=false;setTimeout(()=>$('fBirth').focus(),50);
 }
 function closeSettings(){$('sheet').hidden=true;}
@@ -2068,6 +2167,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('sheet').hidd
 
 drawChips();showQuote();setInterval(showQuote,20000);
 renderStatic();requestAnimationFrame(frame);
+if(sy)setTimeout(()=>syncNow('open'),300);
 })();
 </script>
 <script>
