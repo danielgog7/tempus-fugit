@@ -393,6 +393,43 @@ main{position:relative;z-index:1}
 .splash .sp-k{animation:spIn 1.2s ease both}
 @media (prefers-reduced-motion:reduce){.enter>*,.quote .w,.rd.roll,.sheet .panel,.sheet,.retro,.desk,.splash .sp-k{animation:none!important}}
 
+/* Animações 2 */
+body{overscroll-behavior-y:contain}
+@keyframes growX{from{transform:scaleX(0)}}
+@keyframes growY{from{transform:scaleY(0)}}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes dashIn{from{stroke-dasharray:0 600}}
+.enter .sbar>div,.enter .abar .tr i,.enter .track>i,.enter .kbar i{transform-origin:left;animation:growX 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:.15s}
+.enter svg rect.bar{transform-box:fill-box;transform-origin:bottom;animation:growY .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.15s + var(--d,0)*40ms)}
+.enter .goal-chart polyline{stroke-dasharray:1;animation:draw 1.3s ease both}
+.enter #donutSvg circle{animation:dashIn 1.1s cubic-bezier(.2,.8,.2,1) both}
+.enter #heatmap rect{animation:fadeIn .4s ease both;animation-delay:calc(var(--c,0)*10ms)}
+@keyframes beat{0%{transform:scale(1)}25%{transform:scale(1.012)}100%{transform:scale(1)}}
+#dialSvg.beat{animation:beat .5s ease-out}
+.tabs-in{position:relative}
+.tab-ind{position:absolute;top:-8px;left:0;width:20%;display:flex;justify-content:center;transition:transform .4s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.tab-ind::after{content:"";width:28px;height:2px;border-radius:2px;background:var(--sand);box-shadow:0 0 10px var(--sand)}
+.ptr{position:fixed;top:calc(env(safe-area-inset-top, 0px) - 30px);left:50%;transform:translate(-50%,0);z-index:8;width:38px;height:38px;border-radius:50%;background:var(--raised);border:1px solid var(--line);display:grid;place-items:center;opacity:0;pointer-events:none;color:var(--sand);box-shadow:0 6px 20px rgba(0,0,0,.6)}
+.ptr svg{width:18px;height:18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ptr.spin svg,.sync-ic.busy svg{animation:spin 1.1s linear infinite}
+.sync-ic{padding:7px 9px}
+.sync-ic.ok{color:var(--teal)}.sync-ic.err{color:var(--ember);border-color:rgba(217,83,60,.45)}.sync-ic.busy{color:var(--sand)}
+@media (max-width:430px){.icon-btn .lbl{display:none}.icon-btn{padding:7px 9px}}
+.celebrate{position:fixed;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);cursor:pointer;animation:fadeIn .3s ease}
+.celebrate canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cb-in{position:relative;text-align:center;padding:24px;max-width:90%}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.cb-t{font-family:var(--f-display);font-size:clamp(40px,12vw,60px);line-height:1;color:var(--sand);text-shadow:0 0 30px rgba(219,162,84,.5);animation:pop .6s cubic-bezier(.2,.8,.2,1) both}
+.cb-s{margin-top:12px;font-size:15px;color:var(--fg);animation:fadeIn .6s .25s ease both;overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){.enter *,#dialSvg.beat,.cb-t,.cb-s,.ptr.spin svg,.sync-ic.busy svg{animation:none!important}}
+
+/* Cabeçalho: fundo a toda a largura e por baixo do grão (corrige a barra escura) */
+body{overflow-x:clip}
+.top{z-index:3;background:none}
+.top::before{content:"";position:absolute;top:calc(-1 * env(safe-area-inset-top, 0px));bottom:-10px;left:calc(50% - 50vw);width:100vw;background:linear-gradient(var(--bg) 60%, rgba(2,2,3,0));z-index:-1;pointer-events:none}
+.tabs{z-index:3}
+
 /* Marcos */
 .next{border-color:var(--sand-dim);background:radial-gradient(120% 120% at 100% 0%, rgba(227,171,92,.12), transparent 60%), var(--surface)}
 .next .cd{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:clamp(22px,7vw,30px);color:var(--sand);margin-top:10px}
@@ -460,10 +497,11 @@ main{position:relative;z-index:1}
 <header class="top">
   <div class="brand">Tempus <i>Fugit</i></div>
   <div class="top-actions">
+    <button class="icon-btn sync-ic" id="syncIc" type="button" hidden aria-label="Sincronização"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z"/></svg></button>
     <button class="icon-btn" id="openDesk" type="button" aria-label="Modo relógio de mesa">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Mesa</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="lbl">Mesa</span></button>
     <button class="icon-btn" id="openSettings" type="button" aria-label="Definições">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Definições</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span class="lbl">Definições</span></button>
   </div>
 </header>
 
@@ -482,7 +520,7 @@ main{position:relative;z-index:1}
     </div>
 
     <div class="dial">
-      <svg viewBox="0 0 340 340" aria-hidden="true">
+      <svg viewBox="0 0 340 340" aria-hidden="true" id="dialSvg">
         <g id="dialTicks"></g>
         <circle cx="170" cy="170" r="135" fill="none" stroke="var(--ash)" stroke-width="10"/>
         <circle id="lifeArc" cx="170" cy="170" r="135" fill="none" stroke="var(--sand)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 170 170)"/>
@@ -490,6 +528,7 @@ main{position:relative;z-index:1}
         <circle id="yearArc" cx="170" cy="170" r="118" fill="none" stroke="var(--dusk)" stroke-width="4" stroke-linecap="round" transform="rotate(-90 170 170)"/>
         <circle cx="170" cy="170" r="106" fill="none" stroke="var(--line)" stroke-width="1" stroke-dasharray="1 5.55"/>
         <circle id="secDot" cx="170" cy="64" r="3.2" fill="var(--ember)"/>
+        <g id="dialDust"></g>
         <circle id="lifeHead" cx="170" cy="35" r="7" fill="var(--fg)" class="pulse"/>
       </svg>
       <div class="dial-center">
@@ -874,10 +913,13 @@ main{position:relative;z-index:1}
 <button class="timer-pill" id="timerPill" type="button" hidden></button>
 
 <canvas id="bgfx" aria-hidden="true"></canvas>
+<div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9"/></svg></div>
+<div class="celebrate" id="celebrate" hidden role="dialog" aria-label="Celebração"><canvas id="celebCv"></canvas><div class="cb-in"><div class="cb-t" id="cbTitle"></div><div class="cb-s" id="cbSub"></div></div></div>
 <div class="splash" id="splash" aria-hidden="true"><div class="sp-k">Restam-te</div><div class="sp-v" id="spLeft">0</div><div class="sp-k">segundos</div></div>
 
 <nav class="tabs" aria-label="Secções">
   <div class="tabs-in" role="tablist">
+    <span class="tab-ind" id="tabInd" aria-hidden="true"></span>
     <button class="tab" role="tab" data-view="v-relogio" aria-selected="true" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Relógio</button>
     <button class="tab" role="tab" data-view="v-contagens" aria-selected="false" type="button">
@@ -1057,11 +1099,11 @@ $('quote').addEventListener('click',showQuote);
 const C1=2*Math.PI*135, C2=2*Math.PI*118;
 $('lifeArc').setAttribute('stroke-dasharray',C1);$('yearArc').setAttribute('stroke-dasharray',C2);
 function drawTicks(){
-  let h='';
+  let h='';const ageNow=ageDec(new Date());
   for(let a=0;a<=st.life;a+=5){
     const ang=(a/st.life)*2*Math.PI-Math.PI/2, big=a%10===0, r1=146, r2=big?155:151;
-    h+=`<line x1="${170+r1*Math.cos(ang)}" y1="${170+r1*Math.sin(ang)}" x2="${170+r2*Math.cos(ang)}" y2="${170+r2*Math.sin(ang)}" stroke="var(--faint)" stroke-width="${big?1.5:1}"/>`;
-    if(big&&a>0&&a<st.life-3)h+=`<text x="${170+164*Math.cos(ang)}" y="${170+164*Math.sin(ang)+3}" fill="var(--muted)" font-size="9" font-family="IBM Plex Mono, monospace" text-anchor="middle">${a}</text>`;
+    h+=`<line x1="${170+r1*Math.cos(ang)}" y1="${170+r1*Math.sin(ang)}" x2="${170+r2*Math.cos(ang)}" y2="${170+r2*Math.sin(ang)}" stroke="${a<=ageNow?'var(--sand)':'var(--faint)'}" stroke-width="${big?1.5:1}"/>`;
+    if(big&&a>0&&a<st.life-3)h+=`<text x="${170+164*Math.cos(ang)}" y="${170+164*Math.sin(ang)+3}" fill="${a<=ageNow?'var(--sand)':'var(--muted)'}" font-size="9" font-family="IBM Plex Mono, monospace" text-anchor="middle">${a}</text>`;
   }
   $('dialTicks').innerHTML=h;
 }
@@ -1085,6 +1127,7 @@ function tickFast(now){
   $('yearArc').setAttribute('stroke-dashoffset',C2*(1-(a-ai)*ik));
   const ang=pv*2*Math.PI-Math.PI/2;
   $('lifeHead').setAttribute('cx',170+135*Math.cos(ang));$('lifeHead').setAttribute('cy',170+135*Math.sin(ang));
+  if(view==='v-relogio'){tickDust(170+135*Math.cos(ang),170+135*Math.sin(ang),ang);beatDial(now);}
   const sAng=((now.getSeconds()+now.getMilliseconds()/1000)/60)*2*Math.PI-Math.PI/2;
   $('secDot').setAttribute('cx',170+106*Math.cos(sAng));$('secDot').setAttribute('cy',170+106*Math.sin(sAng));
   $('agePct').textContent='anos · '+fmt1(pct*100)+'% vivido';
@@ -1282,7 +1325,7 @@ function drawDonut(now){
   const free=Math.max(0,R-sleep-chores-screen-work);
   const segs=[['Sono',sleep,'var(--dusk)'],['Trabalho',work,'var(--clay)'],['Rotinas',chores,'var(--ash)'],['Ecrãs',screen,'var(--ember)'],['Livre',free,'var(--sand)']];
   const tot=segs.reduce((s,v)=>s+v[1],0)||1, r=78, C=2*Math.PI*r; let off=0, h='';
-  segs.forEach(([n,v,c])=>{const len=v/tot*C;if(len>0)h+=`<circle cx="100" cy="100" r="${r}" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${Math.max(0,len-2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"/>`;off+=len;});
+  segs.forEach(([n,v,c],si)=>{const len=v/tot*C;if(len>0)h+=`<circle style="animation-delay:${si*110}ms" cx="100" cy="100" r="${r}" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${Math.max(0,len-2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"/>`;off+=len;});
   $('donutSvg').innerHTML=h;
   $('freePct').textContent=Math.round(free/tot*100)+'%';
   const yrs=hh=>fmt1(hh/24/365.2425)+' anos';
@@ -1302,7 +1345,7 @@ function drawDecades(now){
   let g='';
   [0,max/2,max].forEach(v=>{g+=`<line x1="${l}" x2="${W-4}" y1="${sc(v)}" y2="${sc(v)}" stroke="var(--line)"/><text x="${l-6}" y="${sc(v)+3}" text-anchor="end" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">${fmt1(v).replace(',0','')}</text>`;});
   rows.forEach(([d0,v,span],i)=>{const x=l+i*bw+bw*.18, w=bw*.64, y=sc(v);
-    g+=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(0,H-b-y)}" rx="3" fill="${i===0?'var(--sand)':'var(--sand-dim)'}"/>`;
+    g+=`<rect class="bar" style="--d:${i}" x="${x}" y="${y}" width="${w}" height="${Math.max(0,H-b-y)}" rx="3" fill="${i===0?'var(--sand)':'var(--sand-dim)'}"/>`;
     g+=`<text x="${x+w/2}" y="${y-5}" text-anchor="middle" fill="var(--fg)" font-size="10" font-family="IBM Plex Mono, monospace">${fmt1(v)}</text>`;
     g+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">${d0}s</text>`;});
   g+=`<text x="4" y="${t-2}" fill="var(--faint)" font-size="9" font-family="Manrope, sans-serif">anos</text>`;
@@ -1392,7 +1435,7 @@ function drawDays14(){
   let g='';
   [0,maxH/2,maxH].forEach(v=>{g+=`<line x1="${l}" x2="${W-2}" y1="${sc(v)}" y2="${sc(v)}" stroke="var(--line)"/><text x="${l-6}" y="${sc(v)+3}" text-anchor="end" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">${fmt1(v).replace(',0','')}h</text>`;});
   per.forEach((m,i)=>{let y=H-b;const x=l+i*bw+bw*.15,w=bw*.7;
-    st.acts.forEach(a=>{if(!m[a.id])return;const hh=(m[a.id]/60)/maxH*(H-b-t);y-=hh;g+=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(0,hh-0.5)}" fill="${a.color}"/>`;});
+    st.acts.forEach(a=>{if(!m[a.id])return;const hh=(m[a.id]/60)/maxH*(H-b-t);y-=hh;g+=`<rect class="bar" style="--d:${i}" x="${x}" y="${y}" width="${w}" height="${Math.max(0,hh-0.5)}" fill="${a.color}"/>`;});
     if(i%2===1||i===13){const dd=parseDay(days[i]);g+=`<text x="${x+w/2}" y="${H-6}" text-anchor="middle" fill="${i===13?'var(--fg)':'var(--muted)'}" font-size="10" font-family="IBM Plex Mono, monospace">${dd.getDate()}</text>`;}
   });
   $('days14').innerHTML=g;
@@ -1438,7 +1481,7 @@ function doRename(id){
   if(other){st.logs.forEach(l=>{if(l.a===id)l.a=other.id;});st.acts=st.acts.filter(x=>x.id!==id);}else a.name=v;
   renaming=null;save();drawLog();
 }
-function drawLog(){drawActChips();drawKind();drawStats();drawDays14();drawHeatmap();drawHist();drawActs();drawTimer();drawQuick();drawReview();drawGoals(new Date());}
+function drawLog(){drawActChips();drawKind();drawStats();drawDays14();drawHeatmap();drawHist();drawActs();drawTimer();drawQuick();drawReview();drawGoals(new Date());checkGoalCelebrations();}
 
 /* ---------- Tipo de tempo ---------- */
 const KIND={inv:'Investido',neu:'Neutro',des:'Desperdiçado'}, NEXTK={inv:'neu',neu:'des',des:'inv'}, KCOL={inv:'var(--teal)',neu:'var(--ash)',des:'var(--ember)'};
@@ -1504,7 +1547,7 @@ function drawHeatmap(){
     const c=Math.floor(i/7), r=i%7, key=isoDay(d), v=tot[key]||0;
     if(r===0&&d.getMonth()!==lastM){lastM=d.getMonth();if(c<52)g+=`<text x="${L+c*(cs+gp)}" y="10" fill="var(--muted)" font-size="10" font-family="Manrope, sans-serif">${d.toLocaleDateString('pt-PT',{month:'short'}).replace('.','')}</text>`;}
     const op=v?(0.3+0.7*Math.min(1,v/max)).toFixed(2):'1';
-    g+=`<rect x="${L+c*(cs+gp)}" y="${T+r*(cs+gp)}" width="${cs}" height="${cs}" rx="2" fill="${v?col:'var(--raised)'}" fill-opacity="${op}"${key===tKey?' stroke="var(--fg)" stroke-width="1.2"':''}><title>${key}: ${durTxt(v)}</title></rect>`;
+    g+=`<rect style="--c:${c}" x="${L+c*(cs+gp)}" y="${T+r*(cs+gp)}" width="${cs}" height="${cs}" rx="2" fill="${v?col:'var(--raised)'}" fill-opacity="${op}"${key===tKey?' stroke="var(--fg)" stroke-width="1.2"':''}><title>${key}: ${durTxt(v)}</title></rect>`;
   }
   ['seg','qua','sex'].forEach((t,k)=>{g+=`<text x="0" y="${T+(k*2)*(cs+gp)+9}" fill="var(--faint)" font-size="9" font-family="Manrope, sans-serif">${t}</text>`;});
   const W=L+53*(cs+gp), H=T+7*(cs+gp), svg=$('heatmap');
@@ -1543,7 +1586,7 @@ $('bucketForm').addEventListener('submit',e=>{
   save();$('bkTxt').value=$('bkAge').value='';$('bMsg').textContent='';drawBucket(new Date());
 });
 $('bucket').addEventListener('click',e=>{
-  const t=e.target.closest('[data-bk-toggle]');if(t){const it=st.bucket.find(x=>x.id===t.dataset.bkToggle);it.done=it.done?null:Date.now();save();buzz(it.done?[20,60,20]:10);drawBucket(new Date());return;}
+  const t=e.target.closest('[data-bk-toggle]');if(t){const it=st.bucket.find(x=>x.id===t.dataset.bkToggle);it.done=it.done?null:Date.now();save();if(it.done)celebrate('Feito',it.text);else buzz(10);drawBucket(new Date());return;}
   const ed=e.target.closest('[data-bk-edit]');if(ed){const it=st.bucket.find(x=>x.id===ed.dataset.bkEdit);bkEditing=it.id;$('bkTxt').value=it.text;$('bkAge').value=it.age;$('bkSubmit').textContent='Guardar';$('bkTxt').focus();return;}
   const dl=e.target.closest('[data-bk-del]');if(dl&&armed(dl)){st.bucket=st.bucket.filter(x=>x.id!==dl.dataset.bkDel);save();drawBucket(new Date());}
 });
@@ -1655,7 +1698,7 @@ function valueChart(g,pts){
   const mono='font-size="10" font-family="IBM Plex Mono, monospace"';
   let s=`<line x1="${l}" x2="${W-r}" y1="${Y(g.target)}" y2="${Y(g.target)}" stroke="var(--sand)" stroke-dasharray="4 4"/><text x="${W-r}" y="${Y(g.target)-5}" text-anchor="end" fill="var(--sand)" ${mono}>alvo ${nfv.format(g.target)}</text>`;
   [hi,lo].forEach(v=>{s+=`<text x="${l-6}" y="${Y(v)+3}" text-anchor="end" fill="var(--muted)" ${mono}>${nfv.format(Math.round(v*10)/10)}</text>`;});
-  s+=`<polyline fill="none" stroke="var(--fg)" stroke-width="1.8" stroke-linejoin="round" points="${pts.map(p=>X(p.t.getTime()).toFixed(1)+','+Y(p.v).toFixed(1)).join(' ')}"/>`;
+  s+=`<polyline pathLength="1" fill="none" stroke="var(--fg)" stroke-width="1.8" stroke-linejoin="round" points="${pts.map(p=>X(p.t.getTime()).toFixed(1)+','+Y(p.v).toFixed(1)).join(' ')}"/>`;
   pts.forEach((p,i)=>{const last=i===pts.length-1;s+=`<circle cx="${X(p.t.getTime())}" cy="${Y(p.v)}" r="${last?4:2.5}" fill="${last?'var(--sand)':'var(--fg)'}"/>`;});
   const sd=d=>d.toLocaleDateString('pt-PT',{day:'numeric',month:'short'}).replace('.','');
   s+=`<text x="${l}" y="${H-6}" fill="var(--muted)" ${mono}>${sd(pts[0].t)}</text><text x="${W-r}" y="${H-6}" text-anchor="end" fill="var(--muted)" ${mono}>${sd(new Date(t1))}</text>`;
@@ -1719,7 +1762,7 @@ $('goals').addEventListener('click',e=>{
   const q=s=>e.target.closest(s);let b;
   if((b=q('[data-gedit]')))return startGoalEdit(st.goals.find(g=>g.id===b.dataset.gedit));
   if((b=q('[data-gdel]'))){if(armed(b)){st.goals=st.goals.filter(g=>g.id!==b.dataset.gdel);if(gEditing===b.dataset.gdel)resetGoalForm();save();drawGoals(new Date());}return;}
-  if((b=q('[data-gadd]'))){const g=st.goals.find(x=>x.id===b.dataset.gadd),v=pnum($('gv-'+g.id).value),d=$('gd-'+g.id).value;if(isNaN(v)||!d){$('gv-'+g.id).focus();return;}g.entries.push({id:uid(),d,v});save();drawGoals(new Date());return;}
+  if((b=q('[data-gadd]'))){const g=st.goals.find(x=>x.id===b.dataset.gadd),v=pnum($('gv-'+g.id).value),d=$('gd-'+g.id).value;if(isNaN(v)||!d){$('gv-'+g.id).focus();return;}const was=hit(g,series(g).slice(-1)[0].v);g.entries.push({id:uid(),d,v});save();drawGoals(new Date());if(!was&&hit(g,series(g).slice(-1)[0].v))celebrate('Objetivo alcançado',g.name);return;}
   if((b=q('[data-gedel]'))){if(armed(b)){const [gid,eid]=b.dataset.gedel.split('|'),g=st.goals.find(x=>x.id===gid);g.entries=g.entries.filter(x=>x.id!==eid);save();drawGoals(new Date());}return;}
   if((b=q('[data-greset]'))){if(armed(b)){const g=st.goals.find(x=>x.id===b.dataset.greset);g.best=Math.max(g.best||0,Date.now()-g.start);g.resets=(g.resets||0)+1;g.start=Date.now();save();drawGoals(new Date());}}
 });
@@ -1882,7 +1925,7 @@ $('letterForm').addEventListener('submit',e=>{
   $('ltTitle').value=$('ltText').value=$('ltDate').value='';buzz(30);m.className='msg ok';m.textContent=`Carta selada. Só a podes ler a ${dfmt(parseDay(d))}.`;drawLetters();
 });
 $('letters').addEventListener('click',e=>{
-  const o=e.target.closest('[data-lt-open]');if(o){const l=st.letters.find(x=>x.id===o.dataset.ltOpen);if(l&&l.open<=isoDay(new Date())){l.openedAt=Date.now();save();drawLetters();}return;}
+  const o=e.target.closest('[data-lt-open]');if(o){const l=st.letters.find(x=>x.id===o.dataset.ltOpen);if(l&&l.open<=isoDay(new Date())){l.openedAt=Date.now();save();drawLetters();celebrate('Carta aberta','Escrita por ti há '+fmt(Math.round((Date.now()-l.created)/DAY))+' dias.');}return;}
   const d=e.target.closest('[data-lt-del]');if(d&&armed(d)){st.letters=st.letters.filter(x=>x.id!==d.dataset.ltDel);save();drawLetters();}
 });
 $('letterGo').addEventListener('click',()=>{document.querySelector('[data-view="v-objetivos"]').click();setTimeout(()=>$('lettersCard').scrollIntoView({behavior:reduce()?'auto':'smooth',block:'start'}),50);});
@@ -1900,7 +1943,7 @@ function monthBars(Y,logs,cur){
   const m=new Array(12).fill(0);logs.forEach(l=>{m[+l.d.slice(5,7)-1]+=l.m;});
   const cm=cur?new Date().getMonth():11, max=Math.max(60,...m), W=340,H=150,pl=6,b=20,t=16,bw=(W-pl*2)/12;let g='';
   m.forEach((v,i)=>{const h=(v/max)*(H-b-t),x=pl+i*bw+bw*.15,w=bw*.7,y=H-b-h;
-    if(v)g+=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(2,h)}" rx="2" fill="${cur&&i===cm?'var(--sand)':'var(--sand-dim)'}"/><text x="${x+w/2}" y="${y-4}" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="IBM Plex Mono, monospace">${Math.round(v/60)}</text>`;
+    if(v)g+=`<rect class="bar" style="--d:${i}" x="${x}" y="${y}" width="${w}" height="${Math.max(2,h)}" rx="2" fill="${cur&&i===cm?'var(--sand)':'var(--sand-dim)'}"/><text x="${x+w/2}" y="${y-4}" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="IBM Plex Mono, monospace">${Math.round(v/60)}</text>`;
     else g+=`<rect x="${x}" y="${H-b-2}" width="${w}" height="2" fill="var(--line)"/>`;
     g+=`<text x="${x+w/2}" y="${H-6}" text-anchor="middle" fill="${i>cm?'var(--faint)':'var(--muted)'}" font-size="10" font-family="Manrope, sans-serif">${'JFMAMJJASOND'[i]}</text>`;});
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;margin-top:12px" role="img" aria-label="Horas registadas por mês">${g}</svg>`;
@@ -2008,7 +2051,7 @@ function syErr(e){
   if(e.message==='formato')return 'O ficheiro no GitHub não é da Tempus Fugit.';
   return 'Sem ligação ao GitHub. A app tenta outra vez quando houver rede.';
 }
-function syStatus(t,cls){const m=$('syMsg');m.textContent=t;m.className='msg'+(cls?' '+cls:'');}
+function syStatus(t,cls){const m=$('syMsg');m.textContent=t;m.className='msg'+(cls?' '+cls:'');setSyncIc(cls==='ok'?'ok':cls==='err'?'err':'busy',t);}
 function applyRemote(data){
   st=Object.assign({},DEF,data);LISTS.forEach(k=>{if(!Array.isArray(st[k]))st[k]=[];});
   try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}
@@ -2134,6 +2177,76 @@ function tickSplash(){if(!splashOn)return;const ms=Math.max(0,death()-Date.now()
 })();
 $('openRetro').addEventListener('click',()=>{enterView($('retroBody'));});
 
+/* ---------- Animações 2: mostrador vivo, celebrações, gestos, estado de sincronização ---------- */
+const dust=[];let dustLast=0,lastBeat=-1;
+(function(){const g=$('dialDust');for(let i=0;i<16;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r','1.3');c.setAttribute('fill','var(--sand)');c.setAttribute('opacity','0');g.appendChild(c);dust.push({el:c,life:0});}})();
+function tickDust(hx,hy,ang){
+  if(reduce())return;const t=performance.now();
+  if(t-dustLast>150&&introK()>=1){dustLast=t;const p=dust.find(d=>d.life<=0);if(p){p.x=hx;p.y=hy;p.vx=Math.cos(ang)*rnd(.1,.4)+rnd(-.15,.15);p.vy=Math.sin(ang)*rnd(.1,.4)+rnd(.05,.3);p.life=1;}}
+  dust.forEach(p=>{if(p.life<=0)return;p.life-=.012;p.x+=p.vx;p.y+=p.vy;p.vy+=.008;p.el.setAttribute('cx',p.x.toFixed(1));p.el.setAttribute('cy',p.y.toFixed(1));p.el.setAttribute('opacity',Math.max(0,p.life*.8).toFixed(2));});
+}
+function beatDial(now){
+  const s=now.getSeconds();if(s===lastBeat)return;lastBeat=s;
+  if(reduce()||view!=='v-relogio')return;const sv=$('dialSvg');sv.classList.remove('beat');sv.getBoundingClientRect();sv.classList.add('beat');
+}
+
+/* Celebrações */
+let cbRun=0;
+function celebrate(title,sub){
+  $('cbTitle').textContent=title;$('cbSub').textContent=sub||'';const ov=$('celebrate');ov.hidden=false;buzz([30,60,30,60,90]);
+  const cv=$('celebCv'),x=cv.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1),W=window.innerWidth||360,H=window.innerHeight||640;
+  cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+  const cols=['#dba254','#e2dbcd','#d9533c','#f0c27a'],ps=[];
+  if(!reduce())for(let i=0;i<150;i++){const a=Math.random()*6.283,v=rnd(2,9);ps.push({x:W/2,y:H*.42,vx:Math.cos(a)*v,vy:Math.sin(a)*v-3,r:rnd(3,7),rot:rnd(0,6.28),vr:rnd(-.25,.25),c:cols[i%4],life:1});}
+  const id=++cbRun,t0=performance.now();
+  const step=t=>{if(id!==cbRun)return;x.clearRect(0,0,W,H);
+    ps.forEach(p=>{p.vy+=.16;p.vx*=.985;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life-=.0065;x.save();x.translate(p.x,p.y);x.rotate(p.rot);x.globalAlpha=Math.max(0,p.life);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore();});
+    if(t-t0<3200)requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+  clearTimeout(ov._t);ov._t=setTimeout(closeCelebrate,3400);
+}
+function closeCelebrate(){cbRun++;$('celebrate').hidden=true;}
+$('celebrate').addEventListener('click',closeCelebrate);
+let metSeen=null;
+function checkGoalCelebrations(){
+  const keys=new Set();
+  st.goals.forEach(g=>{if(g.type!=='time'||!actById(g.act))return;const [s,e]=bounds(g.per,0);if(minutesIn(g.act,s,e)>=g.hours*60)keys.add(g.id+'|'+isoDay(s));});
+  if(metSeen){for(const k of keys)if(!metSeen.has(k)){const g=st.goals.find(x=>x.id===k.split('|')[0]);if(g){celebrate('Meta cumprida',`${g.name}: ${nfv.format(g.hours)} h ${PER[g.per]}`);break;}}}
+  metSeen=keys;
+}
+
+/* Indicador da barra e gestos */
+const ORDER=['v-relogio','v-contagens','v-graficos','v-registo','v-objetivos'];
+function moveInd(){$('tabInd').style.transform=`translateX(${Math.max(0,ORDER.indexOf(view))*100}%)`;}
+const ptr=$('ptr');let tStart=null,ptrBusy=false;
+function resetPtr(){ptr.classList.remove('spin');ptr.style.transition='transform .3s ease,opacity .3s ease';ptr.style.transform='translate(-50%,0)';ptr.style.opacity='0';setTimeout(()=>{ptr.style.transition='';ptrBusy=false;},320);}
+async function doPullRefresh(){
+  ptrBusy=true;ptr.classList.add('spin');ptr.style.transition='transform .2s ease';ptr.style.transform='translate(-50%,64px)';ptr.style.opacity='1';buzz(10);
+  const t0=Date.now();try{if(sy)await syncNow('pull');else renderStatic();}catch(e){}
+  setTimeout(resetPtr,Math.max(0,700-(Date.now()-t0)));
+}
+document.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1||!$('sheet').hidden||!$('retro').hidden||deskOpen||!$('celebrate').hidden||ptrBusy){tStart=null;return;}
+  const t=e.touches[0];tStart={x:t.clientX,y:t.clientY,time:Date.now(),top:window.scrollY<=0,el:e.target,pull:0};
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(!tStart)return;const t=e.touches[0],dx=t.clientX-tStart.x,dy=t.clientY-tStart.y;
+  if(tStart.top&&dy>0&&Math.abs(dy)>Math.abs(dx)*1.3){tStart.pull=dy;ptr.style.transform=`translate(-50%,${Math.min(80,dy*.45)}px) rotate(${dy*1.4}deg)`;ptr.style.opacity=String(Math.min(1,dy/150));}
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(!tStart)return;const t=e.changedTouches[0],dx=t.clientX-tStart.x,dy=t.clientY-tStart.y,dt=Date.now()-tStart.time,s=tStart;tStart=null;
+  if(s.pull>150){doPullRefresh();return;} if(s.pull>0)resetPtr();
+  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.6&&dt<700&&!(s.el.closest&&s.el.closest('.hm-scroll,.cal,input,textarea,select,.seg,.chips,.act-chips,.range-row,.tabs'))){
+    const i=ORDER.indexOf(view)+(dx<0?1:-1);if(i>=0&&i<ORDER.length)document.querySelector(`[data-view="${ORDER[i]}"]`).click();
+  }
+},{passive:true});
+
+/* Ícone de estado da sincronização */
+function setSyncIc(state,title){const b=$('syncIc');b.hidden=!sy;b.className='icon-btn sync-ic '+state;b.title=title||'';b.setAttribute('aria-label','Sincronização: '+(title||''));}
+$('syncIc').addEventListener('click',()=>{if(sy)syncNow('manual');});
+if(sy)setSyncIc('ok','Ligado ao GitHub');
+setTimeout(moveInd,0);
+
 /* ---------- Marcos ---------- */
 const FACTS=[
  [8,'Mozart','compôs a primeira sinfonia.'],
@@ -2247,7 +2360,7 @@ function frame(t){
 }
 
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
-  view=b.dataset.view;
+  view=b.dataset.view;moveInd();
   document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));
   document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!==view);
   window.scrollTo(0,0);
